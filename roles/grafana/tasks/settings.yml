@@ -1,0 +1,115 @@
+# -----------------------------------------------------------------------------
+# #  LEIDOS PROPRIETARY INFORMATION
+# # 
+# #  Proprietary information owned by LEIDOS that requires protection
+# #  from unauthorized disclosure.
+# # 
+# #  2021 LEIDOS
+# # -----------------------------------------------------------------------------
+# #  Mission IT Applications and Frameworks
+# # 
+# #  POCs:
+# #  Jenna Martins jenna.n.martins@leidos.com
+# #  Andrew Stein andrew.w.stein@leidos.com
+# # 
+# #  Authors:
+# #  Heidi Harris heidi.l.gray@leidos.com
+# #  James Seeman james.seeman@leidos.com
+# #  Dorian Mabrey dorian.n.mabrey@leidos.com
+# # 
+# #  COTS/FOSS SW Dependencies:
+# #  Nginx
+# #  Flask
+# #  Grafana
+# #  Prometheus
+# #  Kibana
+
+---
+- name: Create config directories
+  file:
+   path: "{{ item }}"
+   state: directory
+   owner: root
+   group: grafana
+   mode: 0775
+  with_items:
+   - "{{ grafana_conf_directory }}"
+   - "{{ grafana_conf_directory }}/privisioning"
+   - "{{ grafana_conf_directory }}/provisioning/datasources"
+   - "{{ grafana_conf_directory }}/provisioning/dashboards"
+   - "{{ grafana_data_directory }}"
+   - "{{ grafana_data_directory }}/dashboards"
+
+- name: replace content of ini file
+  copy:
+    src: "{{ grafana_file }}"
+    dest: "{{ grafana_conf_file }}"
+
+- name: Copy datasource config
+  template:
+   src: "prometheus.yml"
+   dest: "{{ grafana_conf_directory }}/provisioning/datasources"
+
+- name: Copy dashboard config
+  template:
+   src: "dashboard.yml"
+   dest: "{{ grafana_conf_directory }}/provisioning/dashboards"
+
+- name: add vhost to nginx
+  lineinfile:
+    path: /etc/nginx/nginx.conf
+    insertafter: '^http {'
+    line: |
+      server {
+        listen                   {{ grafana_nginx_port }} ssl;
+        server_name              {{ grafana_nginx_server_name }};
+        ssl                      on;
+        ssl_certificate          /etc/nginx/ssl/nginx-selfsigned.crt;
+        ssl_certificate_key      /etc/nginx/ssl/nginx-selfsigned.key;
+        ssl_verify_depth         2;
+        error_page               497 https://$host:$server_port$request_uri;
+
+        ssl_client_certificate /etc/nginx/ssl/client_certs.crt;
+        ssl_verify_client optional;
+
+        location = /auth {
+          internal;
+          proxy_pass              http://localhost:{{ flask_port }};
+          proxy_pass_request_body off;
+          proxy_set_header        Content-Length "";
+          proxy_set_header        Port $server_port;
+          proxy_set_header        X-Forwarded-For $remote_addr;
+          proxy_set_header        X-Original-URI $request_uri;
+          proxy_set_header        X-SSL-CERT $ssl_client_cert;
+          proxy_set_header        X-Client-DN $ssl_client_s_dn;
+          proxy_set_header        X-Client-DN-CN $ssl_client_s_dn_cn;
+          proxy_set_header        X-Issuer-DN $ssl_client_i_dn;
+        }
+
+        location / {
+          auth_request /auth;
+
+          proxy_pass               http://localhost:9090;
+          if ($ssl_client_verify != SUCCESS) {
+            return 403;
+          }
+        }
+      }
+    state: present
+
+- name: restart nginx
+  service:
+    name: nginx
+    state: restarted
+
+- name: Create flask auth directory
+  file:
+   path: /etc/flask_auth
+   state: directory
+   mode: 0775
+
+- name: Copy grafana helper
+  copy:
+    src: grafanaHelper.py
+    dest: /etc/flask_auth
+

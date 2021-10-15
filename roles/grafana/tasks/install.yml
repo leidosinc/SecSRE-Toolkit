@@ -1,0 +1,44 @@
+# -----------------------------------------------------------------------------
+# #  LEIDOS PROPRIETARY INFORMATION
+# # 
+# #  Proprietary information owned by LEIDOS that requires protection
+# #  from unauthorized disclosure.
+# # 
+# #  2021 LEIDOS
+# # -----------------------------------------------------------------------------
+# #  Mission IT Applications and Frameworks
+# # 
+# #  POCs:
+# #  Jenna Martins jenna.n.martins@leidos.com
+# #  Andrew Stein andrew.w.stein@leidos.com
+# # 
+# #  Authors:
+# #  Heidi Harris heidi.l.gray@leidos.com
+# #  James Seeman james.seeman@leidos.com
+# #  Dorian Mabrey dorian.n.mabrey@leidos.com
+# # 
+# #  COTS/FOSS SW Dependencies:
+# #  Nginx
+# #  Flask
+# #  Grafana
+# #  Prometheus
+# #  Kibana
+
+---
+- name: copy Grafana package
+  copy:
+   src: grafana-{{ grafana_version }}.{{ grafana_arch }}.rpm
+   dest: /tmp/grafana-{{ grafana_version }}.{{ grafana_arch }}.rpm
+
+- name: install Grafana package
+  yum:
+    name: /tmp/grafana-{{ grafana_version }}.{{ grafana_arch }}.rpm
+    state: present
+    disable_gpg_check: yes
+  become: true
+
+- name: grafana is installed
+  yum:
+    name: grafana
+    state: installed
+    disable_gpg_check: yes

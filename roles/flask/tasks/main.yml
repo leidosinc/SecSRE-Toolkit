@@ -1,0 +1,88 @@
+# -----------------------------------------------------------------------------
+# #  LEIDOS PROPRIETARY INFORMATION
+# # 
+# #  Proprietary information owned by LEIDOS that requires protection
+# #  from unauthorized disclosure.
+# # 
+# #  2021 LEIDOS
+# # -----------------------------------------------------------------------------
+# #  Mission IT Applications and Frameworks
+# # 
+# #  POCs:
+# #  Jenna Martins jenna.n.martins@leidos.com
+# #  Andrew Stein andrew.w.stein@leidos.com
+# # 
+# #  Authors:
+# #  Heidi Harris heidi.l.gray@leidos.com
+# #  James Seeman james.seeman@leidos.com
+# #  Dorian Mabrey dorian.n.mabrey@leidos.com
+# # 
+# #  COTS/FOSS SW Dependencies:
+# #  Nginx
+# #  Flask
+# #  Grafana
+# #  Prometheus
+# #  Kibana
+
+---
+- name: copy python packages
+  copy:
+   src: "{{ item }}"
+   dest: /tmp
+  with_items:
+   - python3.rpm 
+   - python3-pip.rpm
+
+- name: install python3
+  yum:
+   name: /tmp/python3.rpm
+   disable_gpg_check: yes
+   state: installed
+
+- name: install pip
+  yum: 
+   name: /tmp/python3-pip.rpm
+   disable_gpg_check: yes
+   state: installed  
+
+- name: copy pip packages
+  copy:
+   src: pip/
+   dest: /tmp
+
+   #- name: install pip packages
+   #  pip:
+   #   chdir: /tmp
+   #   requirements: requirements.txt
+   #   extra_args: --no-index --find-links reqs 
+
+- name: copy Flask server
+  copy:
+   src: "{{ item }}"
+   dest: /etc/flask_auth
+  with_items:
+   - flask_auth.py
+   - flask-crt.pem
+   - flask-key.pem
+   - server-crt.pem
+
+- name: copy Flask config
+  template:
+   src: flask_config.yml
+   dest: /etc/flask_auth
+  
+- name: create systemd service
+  copy:
+   src: "flask-auth.service"
+   dest: /etc/systemd/system/flask-auth.service
+   mode: 0644
+
+- name: reload systemd
+  systemd:
+   daemon_reload: yes
+
+- name: start Flask service
+  service:
+   name: flask-auth
+   state: started
+

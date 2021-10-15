@@ -1,0 +1,71 @@
+# -----------------------------------------------------------------------------
+# #  LEIDOS PROPRIETARY INFORMATION
+# # 
+# #  Proprietary information owned by LEIDOS that requires protection
+# #  from unauthorized disclosure.
+# # 
+# #  2021 LEIDOS
+# # -----------------------------------------------------------------------------
+# #  Mission IT Applications and Frameworks
+# # 
+# #  POCs:
+# #  Jenna Martins jenna.n.martins@leidos.com
+# #  Andrew Stein andrew.w.stein@leidos.com
+# # 
+# #  Authors:
+# #  Heidi Harris heidi.l.gray@leidos.com
+# #  James Seeman james.seeman@leidos.com
+# #  Dorian Mabrey dorian.n.mabrey@leidos.com
+# # 
+# #  COTS/FOSS SW Dependencies:
+# #  Nginx
+# #  Flask
+# #  Grafana
+# #  Prometheus
+# #  Kibana
+
+- name: copy exporter binaries
+  copy:
+   src: node_exporter-{{ exporter_version }}.{{ exporter_arch }}.tar.gz
+   dest: /tmp
+
+- name: unpack exporter binaries
+  ansible.builtin.unarchive:
+    src: /tmp/node_exporter-{{ exporter_version }}.{{ exporter_arch }}.tar.gz
+    dest: "/tmp"
+    remote_src: true
+
+- name: install node exporter
+  copy:
+   src: /tmp/node_exporter-{{ exporter_version }}.{{ exporter_arch }}/node_exporter 
+   dest: /usr/local/bin/
+   mode: 0775
+   remote_src: true
+
+- name: Node exporter configuration
+  become: true
+  template:
+    src: node_exporter.service
+    dest: "/etc/systemd/system/node_exporter.service"
+
+- name: Daemon reload
+  shell: systemctl daemon-reload
+
+- name: Restart node exporter
+  shell: systemctl restart node_exporter
+
+- name: Add scrape config for prometheus
+  blockinfile:
+    path: /etc/prometheus/prometheus.yml
+    block: |
+      scrape_configs:
+        - job_name: prometheus
+          metrics_path: /metrics
+          static_configs:
+          - targets:
+            - localhost:9100
+
+- name: Restart prometheus
+  service:
+    name: prometheus
+    state: restarted

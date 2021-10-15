@@ -1,0 +1,46 @@
+# -----------------------------------------------------------------------------
+# #  LEIDOS PROPRIETARY INFORMATION
+# # 
+# #  Proprietary information owned by LEIDOS that requires protection
+# #  from unauthorized disclosure.
+# # 
+# #  2021 LEIDOS
+# # -----------------------------------------------------------------------------
+# #  Mission IT Applications and Frameworks
+# # 
+# #  POCs:
+# #  Jenna Martins jenna.n.martins@leidos.com
+# #  Andrew Stein andrew.w.stein@leidos.com
+# # 
+# #  Authors:
+# #  Heidi Harris heidi.l.gray@leidos.com
+# #  James Seeman james.seeman@leidos.com
+# #  Dorian Mabrey dorian.n.mabrey@leidos.com
+# # 
+# #  COTS/FOSS SW Dependencies:
+# #  Nginx
+# #  Flask
+# #  Grafana
+# #  Prometheus
+# #  Kibana
+
+---
+- include: install.yml
+  become: yes
+  tags:
+   - prometheus_install
+
+- include: configure.yml
+  become: yes
+  tags:
+   - prometheus_configure
+
+- name: reload prometheus
+  become: true
+  systemd:
+   daemon_reload: true
+   name: prometheus
+   state: started
+   enabled: true
+  tags:
+   - prometheus_run

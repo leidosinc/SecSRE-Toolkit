@@ -1,0 +1,54 @@
+prometheus_version: 2.29.1
+prometheus_arch: linux-amd64
+prometheus_db_dir: /var/lib/prometheus
+prometheus_config_dir: /etc/prometheus
+prometheus_install_dir: /usr/bin
+
+prometheus_nginx_port: 8443
+prometheus_nginx_server_name: 
+
+grafana_version: 8.1.1-1
+grafana_arch: x86_64
+grafana_port: 3000
+grafana_user: grafana
+grafana_group: grafana
+grafana_file: grafana.ini
+grafana_home: /usr/share/grafana
+grafana_log_directory: /var/log/grafana
+grafana_data_directory: /var/lib/grafana
+grafana_max_open_files: 10000
+grafana_conf_directory: /etc/grafana
+grafana_conf_file: /etc/grafana/grafana.ini
+grafana_directory_plugin: /var/lib/grafana/plugins
+grafana_init_changes:
+ - option: "GRAFANA_USER"
+   value: "{{ grafana_user }}"
+ - option: "GRAFANA_GROUP"
+   value: "{{ grafana_group }}"
+ - option: "GRAFANA_HOME"
+   value:  "{{ grafana_home }}"
+ - option: "LOG_DIR"
+   value: "{{ grafana_log_directory }}"
+ - option: "DATA_DIR"
+   value: "{{ grafana_data_directory }}"
+ - option: "MAX_OPEN_FILES"
+   value: "{{ grafana_max_open_files }}"
+ - option: "CONF_DIR"
+   value: "{{ grafana_conf_directory }}"
+ - option: "CONF_FILE"
+   value: "{{ grafana_conf_file }}"
+ - option: "RESTART_ON_UPGRADE"
+   value: "true"
+ - option: "PLUGINS_DIR"
+   value: "{{ grafana_directory_plugin }}"
+
+grafana_nginx_port: 443
+grafana_nginx_server_name: 
+
+exporter_version: 1.2.2
+exporter_arch: linux-amd64
+
+flask_port: 5000
+pki_api_url:
+flask_grafana_base_url: http://localhost:3000
+

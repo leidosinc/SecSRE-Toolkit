@@ -1,0 +1,14 @@
+[Unit]
+Description=Flask Auth
+After=network-online.target
+Requires=local-fs.target
+After=local-fs.target
+
+[Service]
+Type=simple
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStart=/bin/python3 /etc/flask_auth/flask_auth.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

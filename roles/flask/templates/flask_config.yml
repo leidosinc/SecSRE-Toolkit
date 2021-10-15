@@ -1,0 +1,14 @@
+pki_api_url: {{ pki_api_url }}
+server_cert: /etc/flask_auth/server-crt.pem
+flask_cert: /etc/flask_auth/flask-crt.pem
+flask_key: /etc/flask_auth/flask-key.pem
+
+debug_flask_auth: false
+
+flask_auth_host: 127.0.0.1
+flask_auth_port: {{ flask_port }}
+
+grafana_admin: admin
+grafana_admin_pass: admin
+grafana_base_url: {{ flask_grafana_base_url }}
+

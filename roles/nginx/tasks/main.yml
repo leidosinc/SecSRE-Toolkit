@@ -1,0 +1,72 @@
+# -----------------------------------------------------------------------------
+# #  LEIDOS PROPRIETARY INFORMATION
+# # 
+# #  Proprietary information owned by LEIDOS that requires protection
+# #  from unauthorized disclosure.
+# # 
+# #  2021 LEIDOS
+# # -----------------------------------------------------------------------------
+# #  Mission IT Applications and Frameworks
+# # 
+# #  POCs:
+# #  Jenna Martins jenna.n.martins@leidos.com
+# #  Andrew Stein andrew.w.stein@leidos.com
+# # 
+# #  Authors:
+# #  Heidi Harris heidi.l.gray@leidos.com
+# #  James Seeman james.seeman@leidos.com
+# #  Dorian Mabrey dorian.n.mabrey@leidos.com
+# # 
+# #  COTS/FOSS SW Dependencies:
+# #  Nginx
+# #  Flask
+# #  Grafana
+# #  Prometheus
+# #  Kibana
+
+- name: Copy nginx package
+  copy:
+   src: nginx.rpm
+   dest: /tmp/nginx.rpm
+
+- name: Install nginx package
+  yum:
+    name: /tmp/nginx.rpm
+    disable_gpg_check: yes
+
+- name: Nginx is installed
+  yum:
+    name: nginx
+    state: installed
+
+- name: Add custom map directive for forwarding SSL certificates
+  lineinfile:
+   path: /etc/nginx/nginx.conf
+   insertafter: '^http {'
+   line: |
+     map  $ssl_client_s_dn $ssl_client_s_dn_cn {
+       default "";
+       ~CN=(?<CN>[^,]+) $CN;
+     } 
+   state: present
+
+- name: Configure SELinux to allow HTTPD scripts and modules to connect to the network
+  shell: setsebool -P httpd_can_network_connect 1
+
+- name: Create SSL directory
+  file:
+   path: "/etc/nginx/ssl"
+   state: directory
+   mode: 0775
+
+- name: Generate self-signed key and cert
+  shell: openssl req -x509 -nodes -subj '/CN={{ ansible_default_ipv4.address }}' -newkey rsa:2048 -keyout /etc/nginx/ssl/nginx-selfsigned.key -out /etc/nginx/ssl/nginx-selfsigned.crt
+ 
+- name: Start nginx
+  service:
+   name: nginx
+   state: restarted
+
+- name: Open firewall port
+  become: true
+  shell: firewall-cmd --add-port=443/tcp --permanent && firewall-cmd --add-port=8443/tcp --permanent && firewall-cmd --reload

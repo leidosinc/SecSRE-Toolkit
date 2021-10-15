@@ -1,0 +1,49 @@
+# -----------------------------------------------------------------------------
+# #  LEIDOS PROPRIETARY INFORMATION
+# # 
+# #  Proprietary information owned by LEIDOS that requires protection
+# #  from unauthorized disclosure.
+# # 
+# #  2021 LEIDOS
+# # -----------------------------------------------------------------------------
+# #  Mission IT Applications and Frameworks
+# # 
+# #  POCs:
+# #  Jenna Martins jenna.n.martins@leidos.com
+# #  Andrew Stein andrew.w.stein@leidos.com
+# # 
+# #  Authors:
+# #  Heidi Harris heidi.l.gray@leidos.com
+# #  James Seeman james.seeman@leidos.com
+# #  Dorian Mabrey dorian.n.mabrey@leidos.com
+# # 
+# #  COTS/FOSS SW Dependencies:
+# #  Nginx
+# #  Flask
+# #  Grafana
+# #  Prometheus
+# #  Kibana
+
+---
+
+- name: init grafana service
+  systemd:
+   state: restarted
+   enabled: yes
+   daemon_reload: yes
+   name: grafana-server
+
+- name: restart firewalld service
+  service:
+   name: firewalld
+   state: restarted 
+
+- name: start grafana service
+  service:
+   name: grafana-server
+   state: started
+
+- name: restart grafana service
+  service:
+   name: grafana-server
+   state: restarted

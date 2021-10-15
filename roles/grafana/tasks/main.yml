@@ -1,0 +1,47 @@
+# -----------------------------------------------------------------------------
+# #  LEIDOS PROPRIETARY INFORMATION
+# # 
+# #  Proprietary information owned by LEIDOS that requires protection
+# #  from unauthorized disclosure.
+# # 
+# #  2021 LEIDOS
+# # -----------------------------------------------------------------------------
+# #  Mission IT Applications and Frameworks
+# # 
+# #  POCs:
+# #  Jenna Martins jenna.n.martins@leidos.com
+# #  Andrew Stein andrew.w.stein@leidos.com
+# # 
+# #  Authors:
+# #  Heidi Harris heidi.l.gray@leidos.com
+# #  James Seeman james.seeman@leidos.com
+# #  Dorian Mabrey dorian.n.mabrey@leidos.com
+# # 
+# #  COTS/FOSS SW Dependencies:
+# #  Nginx
+# #  Flask
+# #  Grafana
+# #  Prometheus
+# #  Kibana
+
+---
+- include: install.yml
+  become: true
+  tags:
+    - install-grafana
+
+# Configure grafana init settings.
+- include: settings.yml
+  become: true
+  tags:
+    - configure-grafana
+
+- name: grafana is running and enabled
+  service:
+    name: grafana-server
+    state: started
+    enabled: yes
+
+- name: Open firewall port
+  become: true
+  shell: firewall-cmd --add-port=3000/tcp --permanent && firewall-cmd --reload

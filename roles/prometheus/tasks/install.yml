@@ -1,0 +1,61 @@
+# -----------------------------------------------------------------------------
+# #  LEIDOS PROPRIETARY INFORMATION
+# # 
+# #  Proprietary information owned by LEIDOS that requires protection
+# #  from unauthorized disclosure.
+# # 
+# #  2021 LEIDOS
+# # -----------------------------------------------------------------------------
+# #  Mission IT Applications and Frameworks
+# # 
+# #  POCs:
+# #  Jenna Martins jenna.n.martins@leidos.com
+# #  Andrew Stein andrew.w.stein@leidos.com
+# # 
+# #  Authors:
+# #  Heidi Harris heidi.l.gray@leidos.com
+# #  James Seeman james.seeman@leidos.com
+# #  Dorian Mabrey dorian.n.mabrey@leidos.com
+# # 
+# #  COTS/FOSS SW Dependencies:
+# #  Nginx
+# #  Flask
+# #  Grafana
+# #  Prometheus
+# #  Kibana
+
+---
+- name: create prometheus data directory
+  file:
+   path: "{{ prometheus_db_dir }}"
+   state: directory
+   mode: 0755
+
+- name: create prometheus config directories
+  file:
+   path: "{{ prometheus_config_dir }}"
+   state: directory
+   mode: 0770
+
+- name: unpack prometheus binaries
+  unarchive:
+   src: "prometheus-{{ prometheus_version }}.{{ prometheus_arch }}.tar.gz"
+   dest: "/tmp/"
+
+- name: install prometheus binary
+  copy:
+   src: "/tmp/prometheus-{{ prometheus_version }}.{{ prometheus_arch }}/{{ item }}"
+   dest: "{{ prometheus_install_dir}}/{{ item }}"
+   mode: 0770
+   remote_src: true
+  with_items:
+   - prometheus
+   - promtool
+   
+- name: create systemd service
+  template:
+   src: prometheus.service
+   dest: /etc/systemd/system/prometheus.service
+   mode: 0644
+  notify:
+   - restart prometheus
