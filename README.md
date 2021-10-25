@@ -35,5 +35,12 @@ Flask is a micro web framework written in Python that allows us to authenticate 
 * 	RPM-based Linux system
 * 	RPMs for tools (grafana, prometheus, Nginx, node exporter, flask, python)
 
+## Download Python packages
+Before running the playbook, download the required python packages into files/pip:  
+```
+cd files/pip
+python3 -m pip download -r requirements.txt
+```  
+
 ## Run command
 `sudo ansible-playbook –i inventory main.yaml`
